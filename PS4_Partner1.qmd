@@ -1,0 +1,245 @@
+---
+title: "Untitled"
+format: html
+---
+
+
+
+
+
+```{python}
+import pandas as pd
+import altair as alt
+
+# Load the 2016 dataset
+file_path = '/mnt/data/pos2016.csv'
+pos2016 = pd.read_csv("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\pos2016.csv")
+
+
+# Display the first few rows of the dataset
+pos2016.head()
+```
+
+
+```{python}
+##1.1
+# Subset data for short-term hospitals
+short_term_hospitals_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+# Get the number of hospitals
+num_hospitals_2016 = short_term_hospitals_2016['PRVDR_NUM'].nunique()
+print(f"Number of short-term hospitals in 2016: {num_hospitals_2016}")
+
+```
+
+
+```{python}
+#1.2
+# Specify the file paths
+file_paths = [
+    "C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\pos2017.csv",
+    "C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\pos2018.csv",
+    "C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\pos2019.csv"
+]
+
+data_frames = []
+
+# Loop through file paths and process each year's data
+for year, file_path in zip([2017, 2018, 2019], file_paths):
+    # Use 'ISO-8859-1' encoding to avoid UnicodeDecodeError
+    df = pd.read_csv(file_path, encoding='ISO-8859-1')
+    
+    # Filter for short-term hospitals
+    short_term_df = df[(df['PRVDR_CTGRY_CD'] == 1) & (df['PRVDR_CTGRY_SBTYP_CD'] == 1)].copy()
+    
+    # Assign the 'Year' column
+    short_term_df['Year'] = year
+    data_frames.append(short_term_df)
+
+# Combine all years into a single DataFrame
+combined_data = pd.concat([short_term_hospitals_2016] + data_frames, ignore_index=True)
+
+# Replace NaN values in 'Year' column with 2016
+combined_data['Year'].fillna(2016, inplace=True)
+combined_data['Year'] = combined_data['Year'].astype(int)
+# Display the first few rows to confirm
+combined_data.head()
+
+
+
+
+```
+
+
+```{python}
+# Display the first few rows
+combined_data.head()
+
+```
+
+
+```{python}
+# Save to a CSV file for external viewing
+combined_data.to_csv('combined_data_full.csv', index=False)
+
+```
+
+```{python}
+
+#1.3
+import altair as alt
+
+# Count the number of observations per year
+observations_by_year = combined_data.groupby('Year').size().reset_index(name='Observations')
+
+# Create the bar chart
+observations_plot = alt.Chart(observations_by_year).mark_bar().encode(
+    x=alt.X('Year:O', title='Year'),
+    y=alt.Y('Observations:Q', title='Number of Observations', scale=alt.Scale(domain=[0, observations_by_year['Observations'].max() + 10])),  # Adjust the y-axis scale as needed
+    color=alt.Color('Year:O', legend=alt.Legend(title="Year"))  # Color encoding by Year
+).properties(
+    title='Number of Observations by Year'
+)
+
+# Create text labels for each bar with reduced font size
+text_labels = observations_plot.mark_text(
+    align='center',
+    baseline='bottom',
+    dy=-5,  # Adjust the vertical position of the text
+    fontSize=8  # Set the desired font size for the text
+).encode(
+    x=alt.X('Year:O', title='Year'),  # Ensure the x encoding matches the bars
+    y=alt.Y('Observations:Q', title='Number of Observations'),  # Ensure the y encoding matches the bars
+    text='Observations:Q'  # Display the Observations value
+)
+
+# Combine the bar chart and text labels
+final_plot = observations_plot + text_labels
+
+final_plot.display()
+
+
+
+
+
+```
+
+
+
+```{python}
+#1.4
+# Count unique hospitals per year
+unique_hospitals_by_year = combined_data.groupby('Year')['PRVDR_NUM'].nunique().reset_index(name='Unique_Hospitals')
+
+# Create the bar chart for unique hospitals
+unique_hospitals_plot = alt.Chart(unique_hospitals_by_year).mark_bar().encode(
+    x=alt.X('Year:O', title='Year'),
+    y=alt.Y('Unique_Hospitals:Q', title='Number of Unique Hospitals', scale=alt.Scale(domain=[0, unique_hospitals_by_year['Unique_Hospitals'].max() + 10])),  # Adjust the y-axis scale as needed
+    color=alt.Color('Year:O', legend=alt.Legend(title="Year"))  # Color encoding by Year
+).properties(
+    title='Number of Unique Hospitals by Year'
+)
+
+# Create text labels for each bar with reduced font size
+unique_hospital_text_labels = unique_hospitals_plot.mark_text(
+    align='center',
+    baseline='bottom',
+    dy=-5,  # Adjust the vertical position of the text
+    fontSize=7  # Set the desired font size for the text
+).encode(
+    x=alt.X('Year:O', title='Year'),  # Ensure the x encoding matches the bars
+    y=alt.Y('Unique_Hospitals:Q', title='Number of Unique Hospitals'),  # Ensure the y encoding matches the bars
+    text='Unique_Hospitals:Q'  # Display the Unique Hospitals value
+)
+
+# Combine the bar chart and text labels
+unique_hospitals_final_plot = unique_hospitals_plot + unique_hospital_text_labels
+
+unique_hospitals_final_plot.display()
+
+
+```
+
+
+###SPATIAL
+
+(Partner 1)
+.shp – The main shapefile that stores the geometry of the spatial features (e.g., points, lines, polygons).
+.shx – The shape index format file that stores index data for quickly accessing the geometry in the .shp file. The file size is 514218 KB.
+.dbf – A database file that stores attribute data associated with the shapes in a tabular format (like a spreadsheet). It contains fields for each shape's attributes (e.g., name, type, ID). The file size is 429 KB.
+.prj – The projection file that defines the coordinate system and projection information for the shapefile. The file size is 1 KB.
+.xml – An XML file that can store metadata about the shapefile, including data source, purpose, date created, and additional information for reference. The file size is 5 KB.
+
+##The .shp (shape file) is the heaviest among all the files: 514,218 KB.
+
+##The .prj (projection file) is the lightest: 1 KB
+
+
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+```
+
+
+
+```{python}
+zip_shapefile = gpd.read_file("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\gz_2010_us_860_00_500k.shp")
+
+
+```
+
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+
+# Step 1: Load the shapefile and rename ZCTA5 to ZIP_CD
+zip_shapefile = gpd.read_file("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\gz_2010_us_860_00_500k.shp")
+zip_shapefile = zip_shapefile.rename(columns={'ZCTA5': 'ZIP_CD'})
+
+# Ensure ZIP_CD is a string for consistency
+zip_shapefile['ZIP_CD'] = zip_shapefile['ZIP_CD'].astype(str)
+
+# Step 2: Filter for Texas ZIP Codes (prefixes 75, 76, 77, 78)
+texas_zip_shapefile = zip_shapefile[zip_shapefile['ZIP_CD'].str.startswith(('75', '76', '77', '78'))]
+
+# Step 3: Load the cleaned POS dataset and ensure ZIP_CD is string and clean up any decimal formatting
+combined_data_full = pd.read_csv("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\combined_data_full.csv")
+combined_data_full['ZIP_CD'] = combined_data_full['ZIP_CD'].astype(str).str.split('.').str[0].str.zfill(5)
+
+# Filter the POS data for Texas ZIP codes
+texas_hospitals = combined_data_full[combined_data_full['ZIP_CD'].str.startswith(('75', '76', '77', '78'))]
+
+# Step 4: Count hospitals per ZIP Code in Texas
+hospitals_per_zip = texas_hospitals.groupby('ZIP_CD').size().reset_index(name='hospital_count')
+
+# Step 5: Merge the hospital counts with the Texas ZIP Code shapefile
+texas_zip_shapefile = texas_zip_shapefile.merge(hospitals_per_zip, on='ZIP_CD', how='left').fillna(0)
+
+# Step 6: Display the result for verification
+print(texas_zip_shapefile[['ZIP_CD', 'hospital_count']].head())
+
+
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Plot a choropleth of the number of hospitals per ZIP code in Texas
+fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+texas_zip_shapefile.plot(column='hospital_count', 
+                         cmap='Blues', 
+                         linewidth=0.8, 
+                         ax=ax, 
+                         edgecolor='0.8', 
+                         legend=True)
+
+ax.set_title("Number of Hospitals per ZIP Code in Texas (2016)")
+plt.show()
+
+```
+
+
