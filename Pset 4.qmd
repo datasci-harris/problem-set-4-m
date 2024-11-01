@@ -1,0 +1,146 @@
+---
+title: "Pset 4"
+format: pdf
+---
+
+Partner 1: Mahnoor
+Partner 2: Mauricio Paniagua
+
+Import packages
+```{python}
+import os
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point
+
+
+```
+
+
+Part 2:
+```{python}
+
+# Define paths
+
+file_path_2016 = r"C:\Users\mepr9\Downloads\POS_File_Hospital_Non_Hospital_Facilities_Q4_2016.csv"
+
+file_path_2017 = r"C:\Users\mepr9\Downloads\POS_File_Hospital_Non_Hospital_Facilities_Q4_2017.csv"
+
+file_path_2018 = r"C:\Users\mepr9\Downloads\POS_File_Hospital_Non_Hospital_Facilities_Q4_2018.csv"
+
+file_path_2019 = r"C:\Users\mepr9\Downloads\POS_File_Hospital_Non_Hospital_Facilities_Q4_2019.csv"
+
+# Read in provided paths
+
+df_2016 = pd.read_csv(file_path_2016, encoding="ISO-8859-1")
+
+df_2017= pd.read_csv(file_path_2017, encoding="ISO-8859-1")
+
+df_2018= pd.read_csv(file_path_2018, encoding="ISO-8859-1")
+
+df_2019= pd.read_csv(file_path_2019,  encoding="ISO-8859-1")
+```
+```{python}
+# Filter active hospitals in 2016
+active_hospitals = df_2016[df_2016['PGM_TRMNTN_CD'] == 0][['FAC_NAME', 'ZIP_CD']].copy()
+active_hospitals['Suspected Closure Year'] = None
+
+# Define a function to check active status in a given year
+def check_hospitals_status(df, year, active_hospitals):
+    # Filter active providers for the year
+    active_in_year = set(df[df['PGM_TRMNTN_CD'] == 0]['FAC_NAME'])
+    
+    # Check for hospitals missing or inactive in the year
+    for index, row in active_hospitals.iterrows():
+        facility_name = row['FAC_NAME']
+        
+        # Mark the year of suspected closure if the hospital is no longer active
+        if facility_name not in active_in_year and pd.isna(active_hospitals.at[index, 'Suspected Closure Year']):
+            active_hospitals.at[index, 'Suspected Closure Year'] = year
+
+# Apply the function across the years 2017 to 2019
+check_hospitals_status(df_2017, 2017, active_hospitals)
+check_hospitals_status(df_2018, 2018, active_hospitals)
+check_hospitals_status(df_2019, 2019, active_hospitals)
+
+# Filter hospitals suspected of closure
+closed_hospitals = active_hospitals.dropna(subset=['Suspected Closure Year'])
+
+# Display results
+print(f"Number of suspected closed hospitals: {len(closed_hospitals)}")
+print(closed_hospitals[['FAC_NAME', 'ZIP_CD', 'Suspected Closure Year']])
+
+    
+
+```
+
+Part B, Question 2
+
+```{python}
+# Sort by hospital name and select the first 10 rows
+sorted_closed_hospitals = closed_hospitals.sort_values(by='FAC_NAME').head(10)
+
+# Display the hospital names and suspected closure year
+print(sorted_closed_hospitals[['FAC_NAME', 'Suspected Closure Year']])
+
+```
+
+Part B Question 3
+
+```{python}
+# Step 1: Identify potential mergers/acquisitions
+# Function to check if the count of active hospitals in a zip code decreased the year after closure
+def filter_mergers(closed_hospitals, df_by_year):
+    potential_mergers = []
+
+    # Iterate over each suspected closed hospital
+    for index, row in closed_hospitals.iterrows():
+        zip_code = row['ZIP_CD']
+        closure_year = int(row['Suspected Closure Year'])
+        
+        # Check if we have data for the following year
+        next_year_df = df_by_year.get(closure_year + 1)
+        
+        if next_year_df is not None:
+            # Count active hospitals in this zip code in the suspected closure year and the year after
+            active_in_year = df_by_year[closure_year][(df_by_year[closure_year]['ZIP_CD'] == zip_code) &
+                                                      (df_by_year[closure_year]['PGM_TRMNTN_CD'] == '0')]
+            active_next_year = next_year_df[(next_year_df['ZIP_CD'] == zip_code) &
+                                            (next_year_df['PGM_TRMNTN_CD'] == '0')]
+
+            # If the count of active hospitals did not decrease, it may be a merger/acquisition
+            if len(active_in_year) <= len(active_next_year):
+                potential_mergers.append(index)
+                
+    # Filter out potential mergers from suspected closures
+    corrected_closed_hospitals = closed_hospitals.drop(index=potential_mergers)
+    
+    return corrected_closed_hospitals, closed_hospitals.loc[potential_mergers]
+
+# Create a dictionary with data for each year for easier lookup
+df_by_year = {2016: df_2016, 2017: df_2017, 2018: df_2018, 2019: df_2019}
+
+# Step 2: Apply the filter to identify potential mergers and obtain the corrected list of closures
+corrected_closed_hospitals, potential_mergers = filter_mergers(closed_hospitals, df_by_year)
+
+# Step 3: Reporting
+print(f"Number of hospitals potentially involved in mergers/acquisitions: {len(potential_mergers)}")
+print(f"Number of corrected suspected closures after filtering: {len(corrected_closed_hospitals)}")
+
+# Step 4: Sort and display the corrected list of closures by name, showing the first 10 rows
+sorted_corrected_closed_hospitals = corrected_closed_hospitals.sort_values(by='FAC_NAME').head(10)
+print(sorted_corrected_closed_hospitals[['FAC_NAME', 'ZIP_CD', 'Suspected Closure Year']])
+
+```
+
+Part D, Question 1
+
+```{python}
+# Create a GeoDataFrame for ZIP code centroids
+zips_all_centroids = gpd.GeoDataFrame(
+    zips_data, 
+    geometry=gpd.points_from_xy(zips_data.longitude, zips_data.latitude),
+    crs="EPSG:4326"  # WGS 84 coordinate system
+)
+
+```
