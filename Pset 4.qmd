@@ -346,3 +346,7 @@ zips_map.plot(column='avg_distance_to_hospital_miles', ax=ax, legend=True,
 plt.title('Average Distance to Nearest Hospital by ZIP Code in Texas')
 plt.show()
 ```
+
+Part F, Question 2
+
+Identifying ZIP codes affected by hospital closures provides insight into healthcare access but has significant limitations. Closures can be misleading due to hospital mergers, where services continue under different names, obscuring the true impact on access. Additionally, the variation in ZIP code size and population density means that a closure in a rural area may not affect access as severely as one in a densely populated urban environment. A static analysis that counts open hospitals neglects shifts in healthcare needs and service offerings, while transportation barriers can further limit access for many residents. To improve this measure, a dynamic analysis could track changes over time, integrating transportation data to assess travel times and public transit routes. Including socioeconomic factors and community health assessments would provide a more nuanced understanding of access issues, while considering alternative healthcare options like urgent care and telemedicine could broaden the perspective on healthcare availability. Collaborating with local health organizations can yield valuable insights into the community impacts of closures and enhance our understanding of access disparities.
