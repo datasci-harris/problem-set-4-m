@@ -1,13 +1,14 @@
 ---
-title: "Untitled"
+title: "PS4"
 format: html
 ---
+Partner 1 = Mahnoor Arif
+Partner 2 = Mauricio
 
-
-
-
+#Download and explore the Provider of Services (POS) file (10 pts)
 
 ```{python}
+#Q1
 import pandas as pd
 import altair as alt
 
@@ -18,23 +19,43 @@ pos2016 = pd.read_csv("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-se
 
 # Display the first few rows of the dataset
 pos2016.head()
+
 ```
 
+##Q1
+#The variables pulled are 
+PRVDR_CTGRY_SBTYP_CD: ROVIDER Category (Short Term)
+PRVDR_CTGRY_CD: PROVIDER Category (Long Term)
+FAC_NAME: Facility Name
+PRVDR_NUM: unique CMS certification number
+STATE_CD: State Abbreviation
+PGM_TRMNTN_CD: the current termination status for the
+ provider
+ZIP_CD: ZIP CODE 
 
 ```{python}
-##1.1
+##Q2 (a)
 # Subset data for short-term hospitals
 short_term_hospitals_2016 = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
 
 # Get the number of hospitals
 num_hospitals_2016 = short_term_hospitals_2016['PRVDR_NUM'].nunique()
 print(f"Number of short-term hospitals in 2016: {num_hospitals_2016}")
+#Number of short-term hospitals in 2016: 7245
+#Yes, there are 7245 hospitals categorised as short term facilities
 
+##Q2 (b) According to NHS, short term hospitals 
+# in 2016 were 3,436 in number. This is a fairly
+#  low number compared to
+#CMS data. This discrepancy could be due to 
+# categorisation of what constitutes a short term hospital 
+# and if they were eligble for medicaid/medicare.
 ```
 
 
+
 ```{python}
-#1.2
+#Q3
 # Specify the file paths
 file_paths = [
     "C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\pos2017.csv",
@@ -72,6 +93,7 @@ combined_data.head()
 
 
 ```{python}
+#Q3
 # Display the first few rows
 combined_data.head()
 
@@ -79,6 +101,7 @@ combined_data.head()
 
 
 ```{python}
+#Q3
 # Save to a CSV file for external viewing
 combined_data.to_csv('combined_data_full.csv', index=False)
 
@@ -86,7 +109,7 @@ combined_data.to_csv('combined_data_full.csv', index=False)
 
 ```{python}
 
-#1.3
+#Q3
 import altair as alt
 
 # Count the number of observations per year
@@ -118,16 +141,12 @@ final_plot = observations_plot + text_labels
 
 final_plot.display()
 
-
-
-
-
 ```
 
 
 
 ```{python}
-#1.4
+#Q4
 # Count unique hospitals per year
 unique_hospitals_by_year = combined_data.groupby('Year')['PRVDR_NUM'].nunique().reset_index(name='Unique_Hospitals')
 
@@ -161,6 +180,13 @@ unique_hospitals_final_plot.display()
 ```
 
 
+##Q4
+Since both the number of observations and the number of unique hospitals plot 
+show similar trends, it indicates that the dataset is relatively stable, with few 
+hospitals entering or exiting the dataset each year. This consistency suggests that 
+while some hospitals may close or change ownership, the overall number of operational 
+short-term hospitals remains steady.
+
 ###SPATIAL
 
 (Partner 1)
@@ -185,16 +211,13 @@ import matplotlib.pyplot as plt
 
 
 ```{python}
+#Q1
 zip_shapefile = gpd.read_file("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\gz_2010_us_860_00_500k.shp")
-
-
 ```
 
 
 ```{python}
-import geopandas as gpd
-import pandas as pd
-
+#Q1
 # Step 1: Load the shapefile and rename ZCTA5 to ZIP_CD
 zip_shapefile = gpd.read_file("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\gz_2010_us_860_00_500k.shp")
 zip_shapefile = zip_shapefile.rename(columns={'ZCTA5': 'ZIP_CD'})
@@ -202,15 +225,15 @@ zip_shapefile = zip_shapefile.rename(columns={'ZCTA5': 'ZIP_CD'})
 # Ensure ZIP_CD is a string for consistency
 zip_shapefile['ZIP_CD'] = zip_shapefile['ZIP_CD'].astype(str)
 
-# Step 2: Filter for Texas ZIP Codes (prefixes 75, 76, 77, 78)
-texas_zip_shapefile = zip_shapefile[zip_shapefile['ZIP_CD'].str.startswith(('75', '76', '77', '78'))]
+# Step 2: Filter for Texas ZIP Codes (prefixes 733, 75, 76, 77, 78)
+texas_zip_shapefile = zip_shapefile[zip_shapefile['ZIP_CD'].str.startswith(('733', '75', '76', '77', '78', '79'))]
 
 # Step 3: Load the cleaned POS dataset and ensure ZIP_CD is string and clean up any decimal formatting
 combined_data_full = pd.read_csv("C:\\Users\\arifm\\OneDrive\\Documents\\GitHub\\problem-set-4-m\\combined_data_full.csv")
 combined_data_full['ZIP_CD'] = combined_data_full['ZIP_CD'].astype(str).str.split('.').str[0].str.zfill(5)
 
 # Filter the POS data for Texas ZIP codes
-texas_hospitals = combined_data_full[combined_data_full['ZIP_CD'].str.startswith(('75', '76', '77', '78'))]
+texas_hospitals = combined_data_full[combined_data_full['ZIP_CD'].str.startswith(('733', '75', '76', '77', '78', '79'))]
 
 # Step 4: Count hospitals per ZIP Code in Texas
 hospitals_per_zip = texas_hospitals.groupby('ZIP_CD').size().reset_index(name='hospital_count')
@@ -226,12 +249,12 @@ print(texas_zip_shapefile[['ZIP_CD', 'hospital_count']].head())
 
 
 ```{python}
-import matplotlib.pyplot as plt
 
+#Q2
 # Plot a choropleth of the number of hospitals per ZIP code in Texas
 fig, ax = plt.subplots(1, 1, figsize=(12, 10))
 texas_zip_shapefile.plot(column='hospital_count', 
-                         cmap='Blues', 
+                         cmap='Reds', 
                          linewidth=0.8, 
                          ax=ax, 
                          edgecolor='0.8', 
@@ -242,4 +265,228 @@ plt.show()
 
 ```
 
+#Effects of closures on access in Texas (15 pts)
+#Partner 1
+```{python}
+#Q1
+# Load CSV files with specified encoding to handle special characters
+pos2016 = pd.read_csv('pos2016.csv', encoding='ISO-8859-1')
+pos2017 = pd.read_csv('pos2017.csv', encoding='ISO-8859-1')
+pos2018 = pd.read_csv('pos2018.csv', encoding='ISO-8859-1')
+pos2019 = pd.read_csv('pos2019.csv', encoding='ISO-8859-1')
 
+# Filter for active Texas hospitals in 2016
+active_hospitals = pos2016[(pos2016['STATE_CD'] == 'TX') & (pos2016['PGM_TRMNTN_CD'] == 0)][['FAC_NAME', 'ZIP_CD']].copy()
+active_hospitals['Suspected Closure Year'] = None
+
+# Define a function to check active status in a given year for Texas hospitals
+def check_hospitals_status(df, year, active_hospitals):
+    # Filter active providers for the year in Texas
+    active_in_year = set(df[(df['STATE_CD'] == 'TX') & (df['PGM_TRMNTN_CD'] == 0)]['FAC_NAME'])
+    
+    # Check for hospitals missing or inactive in the year
+    for index, row in active_hospitals.iterrows():
+        facility_name = row['FAC_NAME']
+        
+        # Mark the year of suspected closure if the hospital is no longer active
+        if facility_name not in active_in_year and pd.isna(row['Suspected Closure Year']):
+            active_hospitals.at[index, 'Suspected Closure Year'] = year
+
+# Apply the function across the years 2017 to 2019
+check_hospitals_status(pos2017, 2017, active_hospitals)
+check_hospitals_status(pos2018, 2018, active_hospitals)
+check_hospitals_status(pos2019, 2019, active_hospitals)
+
+# Filter hospitals suspected of closure
+closed_hospitals = active_hospitals.dropna(subset=['Suspected Closure Year'])
+
+# Group by ZIP code to get the count of closures in each ZIP code
+closures_by_zipcode = closed_hospitals.groupby('ZIP_CD').size().reset_index(name='Number of Closures')
+
+# Display the results
+print("List of ZIP codes in Texas with hospital closures from 2016-2019:")
+print(closures_by_zipcode)
+
+
+```
+
+
+```{python}
+#Q2
+##Merging the files
+# Rename the 'Number of Closures' column in closures_by_zipcode to avoid duplicates
+closures_by_zipcode = closures_by_zipcode.rename(columns={'Number of Closures': 'Closures'})
+
+# Ensure that both ZIP_CD columns are of type string
+closures_by_zipcode['ZIP_CD'] = closures_by_zipcode['ZIP_CD'].astype(str)
+texas_zip_shapefile['ZIP_CD'] = texas_zip_shapefile['ZIP_CD'].astype(str)
+
+# Remove the decimal point from ZIP_CD in closures_by_zipcode
+closures_by_zipcode['ZIP_CD'] = closures_by_zipcode['ZIP_CD'].astype(str).str.split('.').str[0]
+# Check the types
+print("closures_by_zipcode ZIP_CD type:", closures_by_zipcode['ZIP_CD'].dtype)
+print("texas_zip_shapefile ZIP_CD type:", texas_zip_shapefile['ZIP_CD'].dtype)
+
+
+# Perform the merge
+merged_data = texas_zip_shapefile.merge(closures_by_zipcode, on='ZIP_CD', how='left').fillna(0)
+
+# Check if the merge was successful by displaying the first few rows
+print("Merged Data Sample:")
+print(merged_data.head())
+
+# Check the columns to ensure no duplicates exist
+print("\nColumns in merged DataFrame:")
+print(merged_data.columns)
+
+```
+
+```{python}
+#Q2
+
+import matplotlib.pyplot as plt
+import geopandas as gpd
+
+# Step 6: Plot the choropleth map
+fig, ax = plt.subplots(1, 1, figsize=(14, 14))
+
+# Plot the number of closures per ZIP code
+merged_data.plot(
+    column='Closures',
+    ax=ax,
+    legend=True,
+    cmap='OrRd',
+    edgecolor='black',  # Outline for ZIP codes
+    legend_kwds={
+        'label': "Number of Hospital Closures",
+        'orientation': "horizontal",
+        'shrink': 0.8,  # Shrink legend to better fit below the map
+    },
+    missing_kwds={
+        "color": "lightgrey",
+        "label": "No data",
+    }
+)
+
+# Add title and labels
+ax.set_title('Hospital Closures in Texas by ZIP Code (2016-2019)', fontsize=18, fontweight='bold')
+ax.set_axis_off()  # Hide axis borders and ticks
+
+
+# Save figure
+plt.savefig("texas_hospital_closures_map.png", dpi=300, bbox_inches='tight')
+
+plt.show()
+
+
+
+```
+
+```{python}
+#Q2
+# Count the number of directly affected zip codes
+# Filter for zip codes where the number of closures is greater than 0
+affected_zip_codes_count = merged_data[merged_data['Closures'] > 0].shape[0]
+
+# Print the result
+print(f'There are {affected_zip_codes_count} directly affected zip codes in Texas.')
+
+```
+
+
+
+```{python}
+#Q3
+
+
+# Step 2: Create a GeoDataFrame for directly affected ZIP codes
+directly_affected_zip_codes = closures_by_zipcode[closures_by_zipcode['Closures'] > 0]
+directly_affected_gdf = texas_zip_shapefile[texas_zip_shapefile['ZIP_CD'].isin(directly_affected_zip_codes['ZIP_CD'])]
+
+# Step 3: Create a 10-mile buffer around the directly affected ZIP codes
+directly_affected_gdf = directly_affected_gdf.set_geometry(directly_affected_gdf.geometry)
+buffered_zip_codes = directly_affected_gdf.geometry.buffer(10 * 1609.34)  # 10 miles in meters
+
+# Create a new GeoDataFrame with the buffered geometries
+buffered_gdf = gpd.GeoDataFrame(geometry=buffered_zip_codes)
+
+# Step 4: Spatial join with the overall Texas ZIP code shapefile to find all ZIP codes within the buffer
+# Use predicate instead of op
+indirectly_affected_zip_codes = gpd.sjoin(texas_zip_shapefile, buffered_gdf, how='inner', predicate='intersects')
+
+# Step 5: Count the number of indirectly affected ZIP codes
+indirectly_affected_zip_codes_count = indirectly_affected_zip_codes['ZIP_CD'].nunique()
+
+# Display the results
+print(f"Number of indirectly affected ZIP codes in Texas: {indirectly_affected_zip_codes_count}")
+
+
+```
+
+
+
+```{python}
+#Q4
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+# Assuming indirectly_affected_zip_codes is already defined
+# Create a category column in texas_zip_shapefile for plotting
+texas_zip_shapefile['Category'] = 'Not Affected'  # Default category
+
+# Mark directly affected ZIP codes
+texas_zip_shapefile.loc[texas_zip_shapefile['ZIP_CD'].isin(directly_affected_zip_codes['ZIP_CD']), 'Category'] = 'Directly Affected'
+
+# Mark indirectly affected ZIP codes (those within the buffer) that are not directly affected
+indirectly_affected_zip_set = set(indirectly_affected_zip_codes['ZIP_CD'])
+texas_zip_shapefile.loc[
+    texas_zip_shapefile['ZIP_CD'].isin(indirectly_affected_zip_set) & 
+    ~texas_zip_shapefile['ZIP_CD'].isin(directly_affected_zip_codes['ZIP_CD']), 
+    'Category'
+] = 'Indirectly Affected'
+
+# Step 2: Plotting
+fig, ax = plt.subplots(1, 1, figsize=(14, 10))
+
+# Plot the ZIP codes with different colors for each category
+color_map = {
+    'Directly Affected': 'lightblue',
+    'Indirectly Affected': 'darkblue',
+    'Not Affected': 'lightgrey'
+}
+
+texas_zip_shapefile.plot(column='Category', 
+                         color=texas_zip_shapefile['Category'].map(color_map),
+                         edgecolor='black', 
+                         ax=ax)
+
+# Add title and legend
+plt.title('Hospital Closure Impact in Texas by ZIP Code', fontsize=18, fontweight='bold')
+ax.set_axis_off()  # Hide axis
+
+#  legend
+import matplotlib.patches as mpatches
+
+handles = [mpatches.Patch(color=color_map[key], label=key) for key in color_map.keys()]
+ax.legend(handles=handles, title="Closure Impact", loc='lower left')
+
+# Save figure
+plt.savefig("texas_hospital_closures_choropleth.png", dpi=300, bbox_inches='tight')
+
+plt.show()
+
+
+```
+
+##Reflecting on the exercise (10 pts)
+
+##Q1 (Partner 1)
+The first pass method may rely on straightforward queries or analyses,
+like counting the number of closures recorded in the data or using 
+flagging criteria to identify potentially affected facilities.
+While it can quickly highlight areas of concern, 
+it is usually limited by potential inaccuracies in the data, lack of context, 
+and failure to consider nuances. Therefore, follow-up verification 
+and validation processes are often necessary to ensure 
+the findings are accurate and comprehensive, as the initial analysis 
+may overlook critical factors influencing the actual situation.
